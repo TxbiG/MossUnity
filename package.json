@@ -1,0 +1,17 @@
+{
+  "name": "com.txbig.moss-unity",
+  "version": "0.1.0",
+  "displayName": "Moss Unity",
+  "description": "Unity integration for the Moss Framework, using MossSharp as its managed binding.",
+  "unity": "2022.3",
+  "author": {
+    "name": "TxbiG",
+    "url": "https://github.com/TxbiG"
+  },
+  "keywords": [
+    "moss",
+    "physics",
+    "simulation",
+    "native"
+  ]
+}
