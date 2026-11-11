@@ -1,0 +1,124 @@
+name: Build
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "Runtime/**"
+      - "Editor/**"
+      - "Tests/**"
+      - "package.json"
+      - ".github/workflows/build.yml"
+  pull_request:
+    paths:
+      - "Runtime/**"
+      - "Editor/**"
+      - "Tests/**"
+      - "package.json"
+      - ".github/workflows/build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mossunity-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package-validation:
+    name: Validate Unity package metadata
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Validate package.json
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("package.json").read_text(encoding="utf-8"))
+          assert data["name"] == "com.txbig.moss-unity"
+          assert data.get("version")
+          assert data.get("unity")
+          print(f"Validated {data['name']} {data['version']}")
+          PY
+
+      - name: Validate assembly definitions
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for path in Path(".").rglob("*.asmdef"):
+              json.loads(path.read_text(encoding="utf-8"))
+              print(f"Valid: {path}")
+          PY
+          test -f Runtime/MossPhysicsWorld.cs
+          test -f Runtime/MossPhysicsBody.cs
+          test -f Editor/MossPhysicsBodyEditor.cs
+
+      - name: Upload package source
+        uses: actions/upload-artifact@v6
+        with:
+          name: MossUnity-source-${{ github.sha }}
+          path: |
+            package.json
+            README.md
+            LICENSE
+            Runtime/
+            Editor/
+            Documentation~/
+          if-no-files-found: error
+          retention-days: 14
+
+  unity-editor:
+    name: Compile package in Unity Editor
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Create minimal Unity project containing this package
+        shell: bash
+        run: |
+          mkdir -p .ci/UnityProject/Assets
+          mkdir -p .ci/UnityProject/Packages/com.txbig.moss-unity
+          rsync -a \
+            --exclude='.git' \
+            --exclude='.ci' \
+            --exclude='.github' \
+            ./ .ci/UnityProject/Packages/com.txbig.moss-unity/
+
+          cat > .ci/UnityProject/Packages/manifest.json <<'JSON'
+          {
+            "dependencies": {
+              "com.txbig.moss-unity": "file:com.txbig.moss-unity"
+            }
+          }
+          JSON
+
+          cat > .ci/UnityProject/ProjectSettings/ProjectVersion.txt <<'EOF'
+          m_EditorVersion: 2022.3.62f1
+          m_EditorVersionWithRevision: 2022.3.62f1
+          EOF
+
+      - name: Run Unity Editor tests and compile assemblies
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: .ci/UnityProject
+          unityVersion: 2022.3.62f1
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          testMode: editmode
+          artifactsPath: artifacts/unity-test-results
+
+      - name: Upload Unity test results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: MossUnity-unity-test-results
+          path: artifacts/unity-test-results/
+          if-no-files-found: ignore
+          retention-days: 14
