@@ -1,0 +1,48 @@
+# --- Native C++ Build Outputs ---
+build/
+out/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+*.o
+*.obj
+*.pdb
+*.ilk
+*.exp
+
+# --- Unity Project Directories ---
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+
+# --- IDE & Generated Project Files ---
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.opendb
+*.VC.db
+
+# --- Unity Builds & Packages ---
+*.apk
+*.aab
+*.unitypackage
+*.app
+crashlytics-build.properties
+
+# IMPORTANT: Never ignore .meta files in Unity!
+# If you distribute via UPM Git URL, keep compiled binaries in Plugins/ tracked via Git LFS.
