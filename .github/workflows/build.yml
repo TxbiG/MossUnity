@@ -92,14 +92,18 @@ jobs:
           cat > .ci/UnityProject/Packages/manifest.json <<'JSON'
           {
             "dependencies": {
-              "com.txbig.moss-unity": "file:com.txbig.moss-unity"
-            }
+              "com.txbig.moss-unity": "file:com.txbig.moss-unity",
+              "com.unity.test-framework": "1.1.33",
+              "com.unity.testtools.codecoverage": "1.2.5"
+            },
+            "testables": [
+              "com.txbig.moss-unity"
+            ]
           }
           JSON
 
           cat > .ci/UnityProject/ProjectSettings/ProjectVersion.txt <<'EOF'
           m_EditorVersion: 2022.3.62f1
-          m_EditorVersionWithRevision: 2022.3.62f1
           EOF
 
       - name: Run Unity Editor tests and compile assemblies
@@ -113,6 +117,7 @@ jobs:
           unityVersion: 2022.3.62f1
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           testMode: editmode
+          coverageOptions: 'dontClear'
           artifactsPath: artifacts/unity-test-results
 
       - name: Upload Unity test results
