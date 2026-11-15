@@ -1,3 +1,4 @@
+[![Build](https://github.com/TxbiG/MossUnity/actions/workflows/build.yml/badge.svg)](https://github.com/TxbiG/MossUnity/actions/workflows/build.yml)
 # MossUnity
 
 Unity integration for the [Moss Framework](https://github.com/TxbiG/Moss).
