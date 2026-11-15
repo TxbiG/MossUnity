@@ -17,6 +17,15 @@ on:
       - "package.json"
       - ".github/workflows/build.yml"
   workflow_dispatch:
+    inputs:
+      get_activation_file:
+        description: 'Generate Unity .alf activation file instead of running build'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 permissions:
   contents: read
@@ -26,11 +35,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  package-validation:
-    name: Validate Unity package metadata
+  request-activation-file:
+    name: Request Unity activation file (.alf)
+    if: github.event_name == 'workflow_dispatch' && inputs.get_activation_file == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - name: Request manual activation file
+        id: getManualLicenseFile
+        uses: game-ci/unity-request-activation-file@v2
+        with:
+          unityVersion: 2022.3.62f1
+
+      - name: Upload activation file artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ManualActivationFile
+          path: ${{ steps.getManualLicenseFile.outputs.filePath }}
+          retention-days: 1
+
+  package-validation:
+    name: Validate Unity package metadata
+    if: inputs.get_activation_file != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Validate package.json
         run: |
@@ -58,7 +86,7 @@ jobs:
           test -f Editor/MossPhysicsBodyEditor.cs
 
       - name: Upload package source
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: MossUnity-source-${{ github.sha }}
           path: |
@@ -73,9 +101,10 @@ jobs:
 
   unity-editor:
     name: Compile package in Unity Editor
+    if: inputs.get_activation_file != 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - name: Create minimal Unity project containing this package
         shell: bash
@@ -120,7 +149,7 @@ jobs:
 
       - name: Upload Unity test results
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: MossUnity-unity-test-results
           path: artifacts/unity-test-results/
