@@ -81,6 +81,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p .ci/UnityProject/Assets
+          mkdir -p .ci/UnityProject/ProjectSettings
           mkdir -p .ci/UnityProject/Packages/com.txbig.moss-unity
           rsync -a \
             --exclude='.git' \
